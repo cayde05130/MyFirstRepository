@@ -1,0 +1,3328 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>간단 사천성 (Mobile)</title>
+  <style>
+    :root {
+      --bg: #f6efe3;
+      --panel: #fffaf2;
+      --ink: #222;
+      --accent: #c7836e;
+      --tile-border: #c9c3b8;
+      --tile-selected: #ffe45e;
+      --tile-selected-glow: rgba(255, 238, 130, 0.85);
+      --tile-match: #8bf7ff;
+      --tile-match-glow: rgba(139, 247, 255, 0.9);
+      --tile-hint: #7bc47f;
+      --path-main: rgba(255, 255, 255, 0.96);
+      --path-glow: rgba(150, 240, 255, 0.45);
+      --path-glow-strong: rgba(130, 230, 255, 0.8);
+      --path-glow-soft: rgba(130, 230, 255, 0.45);
+      --board-bg-image: none;
+      --media-w: 620px;
+      --game-min-w: 760px;
+      --tile-selected-outline: #ffe45e;
+      --tile-selected-shadow: rgba(255, 238, 130, 0.52);
+      --tile-selected-inner: rgba(255, 255, 255, 0.62);
+      --range-track: linear-gradient(90deg, #efd4bc, #e8cbb0);
+      --range-track-border: #d8c1a8;
+      --range-thumb: linear-gradient(145deg, #f7b79d, #d6a98f);
+      --range-thumb-border: #b78974;
+      --btn-muted-bg: #9a7b5d;
+      --btn-muted-hover: #8c6d50;
+      --board-surface: rgba(246, 229, 202, 0.28);
+      --theme-dur: 1900ms;
+      --theme-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { overflow-x: hidden; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans KR", "Segoe UI Emoji", "Apple Color Emoji", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 10% 10%, #fff7e6 0%, var(--bg) 55%, #ebe7de 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+      touch-action: manipulation;
+      font-size: 16px;
+      transition:
+        background var(--theme-dur) var(--theme-ease),
+        color var(--theme-dur) var(--theme-ease);
+    }
+
+    body.theme-dark {
+      --bg: #101826;
+      --panel: #1a2536;
+      --ink: #e5e7eb;
+      --accent: #6da2c3;
+      --tile-border: #475569;
+      --range-track: linear-gradient(90deg, #4f607c, #627896);
+      --range-track-border: #4b5f78;
+      --range-thumb: linear-gradient(145deg, #9bb6d6, #789dc4);
+      --range-thumb-border: #5d7993;
+      --btn-muted-bg: #4b6280;
+      --btn-muted-hover: #3f5672;
+      --board-surface: rgba(30, 41, 59, 0.42);
+      background: radial-gradient(circle at 10% 10%, #253248 0%, #111827 62%, #0b1220 100%);
+      color: var(--ink);
+    }
+
+    body.tone-cool {
+      --range-track: linear-gradient(90deg, #d5e3f4, #c1d4ea);
+      --range-track-border: #b6c8dd;
+      --range-thumb: linear-gradient(145deg, #87a7ca, #6d8fb5);
+      --range-thumb-border: #5f7fa5;
+      --btn-muted-bg: #5f7fa5;
+      --btn-muted-hover: #547195;
+      --board-surface: rgba(211, 225, 242, 0.3);
+    }
+
+    body.theme-dark.tone-cool {
+      --range-track: linear-gradient(90deg, #3d5572, #4f6a8b);
+      --range-track-border: #446082;
+      --range-thumb: linear-gradient(145deg, #88a6c8, #6f90b6);
+      --range-thumb-border: #5d7d9e;
+      --btn-muted-bg: #4c6990;
+      --btn-muted-hover: #425d80;
+      --board-surface: rgba(38, 57, 79, 0.44);
+    }
+
+    .app {
+      max-width: 1720px;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid #ddd6c8;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      transition:
+        background var(--theme-dur) var(--theme-ease),
+        border-color var(--theme-dur) var(--theme-ease),
+        box-shadow var(--theme-dur) var(--theme-ease);
+    }
+
+    .toolbar {
+      padding: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid #ece7dc;
+      background: #fffdf8;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease);
+    }
+
+    .settings-head {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed #e8dfcf;
+      margin-bottom: 4px;
+    }
+
+    .settings-head strong {
+      font-size: 14px;
+      color: #334155;
+      letter-spacing: 0.01em;
+    }
+
+    .settings-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .theme-toggle {
+      min-height: 40px;
+    }
+
+    .toolbar label {
+      font-size: 13px;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: linear-gradient(160deg, #fff8ef, #f9f0e3);
+      border: 1px solid #e4d3bb;
+      color: #5e4527;
+      min-width: 122px;
+    }
+
+    .num-stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid #dfccb2;
+      background: #fff6ea;
+    }
+
+    .step-btn {
+      min-height: 42px;
+      min-width: 42px;
+      padding: 0;
+      border-radius: 10px;
+      background: #8a6b4d;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .num-stepper input[type="number"] {
+      width: 64px;
+      min-height: 42px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ddc8ae;
+      background: #fffdf9;
+      color: #1f2937;
+      padding: 4px 6px;
+    }
+
+    .mode-pill {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid #e4d3bb;
+      background: linear-gradient(160deg, #fff8ef, #f9f0e3);
+      font-size: 13px;
+      font-weight: 700;
+      color: #5e4527;
+      min-width: 122px;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease);
+    }
+
+    .mode-toggle {
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e8d8c2;
+      border-color: #d8c3a8;
+    }
+
+    .mode-toggle .layout-btn {
+      border-radius: 999px;
+      padding: 6px 14px;
+      min-height: 34px;
+      font-size: 12px;
+      color: #5a4423;
+    }
+
+    .mode-toggle .layout-btn.active {
+      color: #31230f;
+      box-shadow: 0 2px 10px rgba(49, 35, 15, 0.18);
+    }
+
+    .theme-row {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .theme-row label {
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f7f4ea;
+      border: 1px solid #e6dfcf;
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+
+    .theme-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #7aa6c4;
+    }
+
+    .theme-row select {
+      border: 1px solid #cfc8ba;
+      border-radius: 8px;
+      padding: 4px 6px;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .theme-row input[type="color"] {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .audio-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 10px;
+      margin-top: 2px;
+      padding-top: 2px;
+      border-top: 1px dashed #e8e1d3;
+    }
+
+    .media-column .audio-row {
+      margin-top: 0;
+      padding: 10px 12px 0;
+      border-top: 0;
+    }
+
+    .toolbar > #mediaControls {
+      display: none;
+    }
+
+    .audio-card {
+      background: linear-gradient(160deg, #fff7ec, #f5ecde);
+      border: 1px solid #e4d3bc;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease);
+    }
+
+    .audio-card h4 {
+      margin: 0;
+      font-size: 13px;
+      color: #334155;
+      letter-spacing: 0.01em;
+    }
+
+    .audio-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .audio-row label {
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff9f0;
+      border: 1px solid #e0cdb4;
+      border-radius: 8px;
+      padding: 4px 8px;
+      color: #334155;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease);
+    }
+
+    .audio-row select,
+    .audio-row input[type="text"] {
+      border: 1px solid #dcc8af;
+      border-radius: 8px;
+      padding: 4px 6px;
+      font-size: 13px;
+      background: #fff;
+      color: #1f2937;
+    }
+
+    .audio-row input[type="text"] {
+      min-width: 220px;
+    }
+
+    .audio-row input[type="range"] {
+      width: 160px;
+      appearance: none;
+      -webkit-appearance: none;
+      height: 14px;
+      border-radius: 999px;
+      background: var(--range-track);
+      border: 1px solid var(--range-track-border);
+      padding: 0;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease);
+    }
+
+    .audio-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 14px;
+      border-radius: 5px;
+      background: var(--range-thumb);
+      border: 1px solid var(--range-thumb-border);
+      box-shadow: 0 1px 2px rgba(40, 51, 66, 0.25);
+      cursor: pointer;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), box-shadow var(--theme-dur) var(--theme-ease);
+    }
+
+    .audio-row input[type="range"]::-moz-range-track {
+      height: 14px;
+      border-radius: 999px;
+      background: var(--range-track);
+      border: 1px solid var(--range-track-border);
+    }
+
+    .audio-row input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 14px;
+      border-radius: 5px;
+      background: var(--range-thumb);
+      border: 1px solid var(--range-thumb-border);
+      box-shadow: 0 1px 2px rgba(40, 51, 66, 0.25);
+      cursor: pointer;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), box-shadow var(--theme-dur) var(--theme-ease);
+    }
+
+    .audio-hint {
+      font-size: 12px;
+      color: #475569;
+      margin: 0;
+    }
+
+    .layout-toggle {
+      position: relative;
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: center;
+      background: #ecd9c1;
+      border: 1px solid #dcc5a9;
+      border-radius: 10px;
+      padding: 3px;
+      gap: 0;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease);
+    }
+
+    .layout-toggle::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      bottom: 3px;
+      left: 3px;
+      width: calc((100% - 6px) / 2);
+      border-radius: 8px;
+      background: #fffdf9;
+      box-shadow: 0 2px 10px rgba(60, 33, 8, 0.14);
+      transform: translateX(calc(var(--seg-index, 0) * 100%));
+      transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1), background var(--theme-dur) var(--theme-ease), box-shadow var(--theme-dur) var(--theme-ease);
+      z-index: 0;
+    }
+
+    .layout-btn {
+      border: 0;
+      border-radius: 8px;
+      min-height: 32px;
+      padding: 6px 12px;
+      background: transparent;
+      color: #6a4f2f;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+      transition:
+        color var(--theme-dur) var(--theme-ease),
+        transform 220ms var(--theme-ease);
+    }
+
+    .layout-btn.active {
+      color: #34210e;
+      transform: translateY(-1px);
+    }
+
+    body.theme-dark .app {
+      border-color: #334155;
+      box-shadow: 0 18px 36px rgba(2, 6, 23, 0.45);
+    }
+
+    body.theme-dark .toolbar,
+    body.theme-dark .stats {
+      background: #0b1220;
+      border-color: #334155;
+      color: #cbd5e1;
+    }
+
+    body.theme-dark .settings-head {
+      border-bottom-color: rgba(148, 163, 184, 0.28);
+    }
+
+    body.theme-dark .audio-row {
+      border-top-color: rgba(148, 163, 184, 0.22);
+    }
+
+    body.theme-dark .settings-head strong,
+    body.theme-dark .audio-card h4 {
+      color: #e2e8f0;
+    }
+
+    body.theme-dark .panel-section {
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+      border-color: rgba(71, 85, 105, 0.78);
+    }
+
+    body.theme-dark .panel-head,
+    body.theme-dark .media-head {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.92));
+      border-bottom-color: rgba(71, 85, 105, 0.74);
+      color: #e2e8f0;
+    }
+
+    body.theme-dark .audio-card,
+    body.theme-dark .settings-dialog {
+      background: rgba(15, 23, 42, 0.94);
+      border-color: rgba(71, 85, 105, 0.72);
+      color: #dbeafe;
+    }
+
+    body.theme-dark .theme-row label {
+      background: #1f2a3d;
+      border-color: #475569;
+      color: #dbeafe;
+    }
+
+    body.theme-dark .theme-row select {
+      background: #111827;
+      border-color: #475569;
+      color: #e5e7eb;
+    }
+
+    body.theme-dark .audio-row label {
+      background: #1f2a3d;
+      border-color: #475569;
+      color: #dbeafe;
+    }
+
+    body.theme-dark .audio-row input[type="range"] {
+      background: var(--range-track);
+      border-color: var(--range-track-border);
+    }
+
+    body.theme-dark .audio-row input[type="range"]::-webkit-slider-thumb,
+    body.theme-dark .audio-row input[type="range"]::-moz-range-thumb {
+      background: var(--range-thumb);
+      border-color: var(--range-thumb-border);
+    }
+
+    body.theme-dark .num-stepper {
+      background: #1f2a3d;
+      border-color: #475569;
+    }
+
+    body.theme-dark .step-btn {
+      background: #4b6280;
+    }
+
+    body.theme-dark .num-stepper input[type="number"] {
+      background: #111827;
+      border-color: #475569;
+      color: #e5e7eb;
+    }
+
+    body.theme-dark .toolbar label {
+      background: #1f2a3d;
+      border-color: #475569;
+      color: #dbeafe;
+    }
+
+    body.theme-dark .mode-pill {
+      border-color: #475569;
+      background: #1f2a3d;
+      color: #dbeafe;
+    }
+
+    body.theme-dark .mode-toggle {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    body.theme-dark .mode-toggle .layout-btn {
+      color: #dbeafe;
+    }
+
+    body.theme-dark .mode-toggle .layout-btn.active {
+      background: #0f172a;
+      color: #f8fafc;
+      box-shadow: 0 2px 10px rgba(2, 6, 23, 0.4);
+    }
+
+    body.theme-dark .audio-hint,
+    body.theme-dark .message,
+    body.theme-dark .settings-note {
+      color: #cbd5e1;
+    }
+
+    body.theme-dark input,
+    body.theme-dark select {
+      background: #111827;
+      color: #e5e7eb;
+      border-color: #475569;
+    }
+
+    body.theme-dark .layout-toggle {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    body.theme-dark .layout-toggle::before {
+      background: #0f172a;
+      box-shadow: 0 2px 12px rgba(2, 6, 23, 0.5);
+    }
+
+    body.theme-dark .layout-btn {
+      color: #cbd5e1;
+    }
+
+    body.theme-dark .layout-btn.active {
+      color: #f8fafc;
+      box-shadow: none;
+    }
+
+    body.theme-dark .time-chip {
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: linear-gradient(145deg, rgba(30, 41, 59, 0.76), rgba(51, 65, 85, 0.66));
+      box-shadow: 0 8px 20px rgba(2, 6, 23, 0.26), inset 0 1px 0 rgba(148, 163, 184, 0.16);
+      color: #dbeafe;
+    }
+
+    body.theme-dark .time-chip .label {
+      opacity: 0.8;
+      color: #cbd5e1;
+    }
+
+    body.theme-dark .mode-info {
+      color: #dbeafe;
+      background: rgba(30, 41, 59, 0.56);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+    }
+
+    .yt-wrap {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      margin: 12px auto;
+      width: calc(100% - 24px);
+      flex: 1;
+    }
+
+    .local-video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #020617;
+      display: none;
+    }
+
+    .yt-wrap.local-active .local-video {
+      display: block;
+    }
+
+    .yt-wrap.local-active .yt-frame,
+    .yt-wrap.local-active .yt-placeholder {
+      display: none;
+    }
+
+    .yt-placeholder {
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #cbd5e1;
+      font-size: 14px;
+      text-align: center;
+      padding: 18px;
+      line-height: 1.5;
+    }
+
+    .yt-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 0;
+      display: none;
+    }
+
+    .yt-wrap.active .yt-frame {
+      display: block;
+    }
+
+    .yt-wrap.active .yt-placeholder {
+      display: none;
+    }
+
+    .play-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "game"
+        "media";
+      gap: 12px;
+      padding: 8px 16px 16px;
+    }
+
+    .game-column {
+      grid-area: game;
+      min-width: 0;
+      display: flex;
+    }
+
+    .panel-section {
+      background: linear-gradient(160deg, rgba(255, 252, 246, 0.92), rgba(248, 239, 224, 0.84));
+      border: 1px solid rgba(220, 197, 166, 0.72);
+      border-radius: 14px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), box-shadow var(--theme-dur) var(--theme-ease);
+    }
+
+    .panel-head {
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #5a4529;
+      border-bottom: 1px solid rgba(219, 197, 169, 0.48);
+      background: transparent;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease);
+    }
+
+    .panel-head .time-chip {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+    }
+
+    
+
+    
+    .panel-body {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+
+.game-actions {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 12px 10px;
+      box-sizing: border-box;
+    }
+
+    .media-column {
+      grid-area: media;
+      min-width: 260px;
+      display: flex;
+    }
+
+    .game-column .panel-section,
+    .media-column .panel-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .media-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0;
+      font-size: 13px;
+      color: #5a4529;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(219, 197, 169, 0.48);
+      background: transparent;
+      min-height: 52px;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease);
+    }
+
+    .media-toggle-btn {
+      min-height: 34px;
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    #mediaControls.collapsed {
+      display: none !important;
+    }
+
+    .play-layout[data-layout="stack"] {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "game"
+        "media";
+    }
+
+    .play-layout[data-layout="stack"] .media-column {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .play-layout[data-layout="stack"] .yt-wrap {
+      width: 100%;
+      min-height: 220px;
+      flex: 0 0 auto;
+    }
+
+    @media (min-width: 1024px) {
+      .play-layout[data-layout="side"] {
+        grid-template-columns: minmax(var(--game-min-w), 1fr) minmax(480px, var(--media-w));
+        grid-template-areas: "game media";
+        align-items: stretch;
+      }
+
+      .play-layout[data-layout="side"] .yt-wrap {
+        min-height: 320px;
+      }
+    }
+
+    input[type="number"] {
+      width: 78px;
+      padding: 6px 8px;
+      border: 1px solid #cfc8ba;
+      border-radius: 8px;
+      font-size: 17px;
+      min-height: 44px;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 12px;
+      background: #333;
+      color: #fff;
+      font-size: 17px;
+      min-height: 44px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:hover { opacity: 0.92; }
+
+    .btn-accent { background: var(--accent); }
+    .btn-muted { background: var(--btn-muted-bg); }
+    .btn-muted:hover { background: var(--btn-muted-hover); opacity: 1; }
+
+    .stats {
+      padding: 10px 16px;
+      font-size: 15px;
+      border-bottom: 1px solid #ece7dc;
+      background: transparent;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease);
+    }
+
+    .time-chip {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      background: linear-gradient(145deg, rgba(255, 251, 245, 0.9), rgba(250, 236, 219, 0.76));
+      box-shadow: 0 8px 22px rgba(57, 85, 104, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      color: #4b3620;
+      letter-spacing: 0.02em;
+      min-width: 172px;
+      justify-content: center;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease), box-shadow var(--theme-dur) var(--theme-ease);
+    }
+
+    .time-chip .label {
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0.75;
+      text-transform: uppercase;
+    }
+
+    .time-chip .value {
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mode-info {
+      font-size: 13px;
+      color: #5a4429;
+      background: rgba(255, 250, 242, 0.68);
+      border: 1px solid rgba(225, 203, 173, 0.66);
+      border-radius: 999px;
+      padding: 5px 10px;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease), color var(--theme-dur) var(--theme-ease);
+    }
+
+    .game-surface {
+      background-image:
+        linear-gradient(rgba(255, 248, 238, 0.34), rgba(255, 248, 238, 0.34)),
+        var(--board-bg-image),
+        linear-gradient(140deg, #f8efe2, #efe1cd);
+      background-size: cover, cover, cover;
+      background-position: center, center, center;
+      background-repeat: no-repeat, no-repeat, no-repeat;
+      transition: background-image var(--theme-dur) var(--theme-ease);
+    }
+
+    body.theme-dark .game-surface {
+      background-image:
+        linear-gradient(rgba(26, 37, 54, 0.68), rgba(26, 37, 54, 0.68)),
+        var(--board-bg-image),
+        linear-gradient(140deg, #27364c, #1a2536);
+    }
+
+    .board-wrap {
+      padding: 12px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 360px;
+      width: 100%;
+    }
+
+    .board-stack {
+      position: relative;
+      display: block;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .path-layer {
+      position: absolute;
+      pointer-events: none;
+      z-index: 3;
+      inset: 0;
+      overflow: visible;
+    }
+
+    .board {
+      display: grid;
+      gap: 0;
+      justify-content: center;
+      align-content: start;
+      min-height: 260px;
+      min-width: 0;
+      position: relative;
+      z-index: 2;
+      padding: 8px;
+      border-radius: 12px;
+      background: var(--board-surface);
+      backdrop-filter: blur(0.5px);
+      touch-action: manipulation;
+      transition: background var(--theme-dur) var(--theme-ease), border-color var(--theme-dur) var(--theme-ease);
+    }
+
+    body.theme-dark .board {
+      background: var(--board-surface);
+    }
+
+    .tile {
+      --hover-lift: 0px;
+      --hover-scale: 1;
+      --sel-scale: 1;
+      width: 56px;
+      height: 66px;
+      border: 1px solid var(--tile-border);
+      border-radius: 12px;
+      color: #1f2937;
+      font-size: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transform: translate3d(0, calc(var(--hover-lift) * -1), 0) scale(calc(var(--sel-scale) * var(--hover-scale)));
+      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1), background 180ms ease;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+      position: relative;
+      overflow: hidden;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      will-change: transform;
+      background-image:
+        linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.15) 0px, rgba(255,255,255,0.15) 6px, rgba(0,0,0,0.03) 6px, rgba(0,0,0,0.03) 12px),
+        linear-gradient(120deg, hsl(var(--h) 60% 86%), hsl(var(--h) 55% 74%));
+    }
+
+    body.theme-dark .tile {
+      color: #eef2ff;
+      text-shadow: 0 1px 0 rgba(2, 6, 23, 0.7);
+      background-color: hsl(var(--h) 24% 34%);
+      background-image:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)),
+        linear-gradient(125deg, hsl(var(--h) 24% 42%), hsl(var(--h) 24% 32%));
+    }
+
+    .tile:hover {
+      --hover-lift: 3px;
+      --hover-scale: 1.03;
+    }
+
+    .tile.selected {
+      --sel-scale: 1.06;
+      z-index: 4;
+      box-shadow: 0 0 0 1px var(--tile-selected-inner) inset, 0 0 12px var(--tile-selected-shadow);
+    }
+
+    body.theme-dark .tile.selected {
+      box-shadow: 0 0 0 1px rgba(203, 213, 225, 0.28) inset, 0 0 18px var(--tile-selected-shadow);
+    }
+
+    .tile.hint {
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.68) inset,
+        0 0 0 2px rgba(103, 224, 126, 0.72),
+        0 0 18px rgba(103, 224, 126, 0.52);
+      animation: hintPulse 1.25s ease-in-out infinite;
+    }
+
+    body.theme-dark .tile.hint {
+      box-shadow:
+        0 0 0 1px rgba(203, 213, 225, 0.34) inset,
+        0 0 0 2px rgba(134, 255, 166, 0.8),
+        0 0 20px rgba(134, 255, 166, 0.56);
+    }
+
+    .tile.removed {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .tile.removing {
+      pointer-events: none;
+      animation: tileFadeOut 0.28s ease forwards;
+    }
+
+    .tile.fail {
+      animation: shake 0.28s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    .tile.success {
+      animation: pop 0.22s ease;
+      outline: 3px solid var(--tile-match);
+      outline-offset: -3px;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.72) inset, 0 0 16px var(--tile-match-glow);
+    }
+
+    .tile.success.removing {
+      animation: pop 0.14s ease, tileFadeOut 0.28s ease forwards;
+    }
+
+    .path-main {
+      --path-base-width: 3.5;
+      --path-peak-width: 4.4;
+      stroke: var(--path-main);
+      stroke-width: var(--path-base-width);
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 3px var(--path-glow-strong)) drop-shadow(0 0 9px var(--path-glow-soft));
+      animation:
+        drawPath 0.68s cubic-bezier(0.16, 0.84, 0.24, 1) forwards,
+        pathBloom 0.68s cubic-bezier(0.16, 0.84, 0.24, 1) forwards,
+        pathFadeOut 0.48s ease 0.46s forwards;
+    }
+
+    .path-glow {
+      --path-base-width: 7;
+      --path-peak-width: 8.8;
+      stroke: var(--path-glow);
+      stroke-width: var(--path-base-width);
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: blur(1.5px);
+      animation:
+        drawPath 0.74s cubic-bezier(0.16, 0.84, 0.24, 1) forwards,
+        pathBloom 0.74s cubic-bezier(0.16, 0.84, 0.24, 1) forwards,
+        pathFadeOut 0.52s ease 0.5s forwards;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-4px); }
+      40% { transform: translateX(4px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+      100% { transform: translateX(0); }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes drawPath {
+      0% { stroke-dashoffset: var(--path-len, 220); opacity: 0.06; }
+      30% { opacity: 0.78; }
+      68% { opacity: 1; }
+      100% { stroke-dashoffset: 0; opacity: 1; }
+    }
+
+    @keyframes pathBloom {
+      0% {
+        stroke-width: calc(var(--path-base-width) * 0.86);
+        opacity: 0.72;
+      }
+      45% {
+        stroke-width: var(--path-peak-width);
+        opacity: 1;
+      }
+      100% {
+        stroke-width: var(--path-base-width);
+        opacity: 1;
+      }
+    }
+
+    @keyframes pathFadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    @keyframes tileFadeOut {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.92); }
+    }
+
+    @keyframes hintPulse {
+      0%, 100% {
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.66) inset,
+          0 0 0 2px rgba(103, 224, 126, 0.66),
+          0 0 12px rgba(103, 224, 126, 0.42);
+      }
+      50% {
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.78) inset,
+          0 0 0 2px rgba(103, 224, 126, 0.9),
+          0 0 24px rgba(103, 224, 126, 0.7);
+      }
+    }
+
+    .tile.spawning {
+      opacity: 0;
+      transform: translate3d(0, -18px, 0) scale(0.96);
+      animation: tileSpawn 420ms cubic-bezier(0.18, 0.8, 0.2, 1) forwards;
+      animation-delay: var(--spawn-delay, 0ms);
+    }
+
+    @keyframes tileSpawn {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -18px, 0) scale(0.96);
+      }
+      100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+    }
+
+    .message {
+      padding: 0 12px 12px;
+      font-size: 14px;
+      color: #334155;
+      min-height: 22px;
+      background: transparent;
+      width: 100%;
+      text-align: center;
+    }
+
+    .clear-popup {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      padding: 12px;
+      background: transparent;
+    }
+
+    .clear-popup.show {
+      display: flex;
+      animation: clearFadeIn 240ms ease forwards;
+    }
+
+    .start-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 7;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.44), rgba(255, 255, 255, 0.3));
+      pointer-events: none;
+      transition: background var(--theme-dur) var(--theme-ease);
+    }
+
+    body.theme-dark .start-overlay {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.46), rgba(15, 23, 42, 0.34));
+    }
+
+    .start-overlay.show {
+      display: flex;
+    }
+
+    .start-overlay .start-btn {
+      pointer-events: auto;
+      min-width: 180px;
+      min-height: 54px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 14px;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.24);
+    }
+
+    .clear-card {
+      width: min(340px, 92%);
+      border-radius: 18px;
+      border: 1px solid rgba(224, 196, 160, 0.9);
+      background: linear-gradient(180deg, rgba(255, 251, 243, 0.97), rgba(246, 229, 206, 0.94));
+      box-shadow: 0 16px 34px rgba(64, 42, 16, 0.2);
+      padding: 16px 14px 14px;
+      text-align: center;
+      pointer-events: auto;
+    }
+
+    body.theme-dark .clear-card {
+      border-color: rgba(71, 85, 105, 0.82);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92));
+      box-shadow: 0 18px 36px rgba(2, 6, 23, 0.42);
+    }
+
+    .clear-title {
+      margin: 0 0 10px;
+      font-size: 25px;
+      font-weight: 900;
+      color: #4a3216;
+      letter-spacing: -0.4px;
+    }
+
+    body.theme-dark .clear-title {
+      color: #f1f5f9;
+    }
+
+    .clear-time-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #816446;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    body.theme-dark .clear-time-label {
+      color: #cbd5e1;
+    }
+
+    .clear-time-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #3d2810;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 12px;
+      text-shadow: 0 1px 0 rgba(255, 251, 243, 0.85);
+    }
+
+    body.theme-dark .clear-time-value {
+      color: #f8fafc;
+      text-shadow: 0 1px 0 rgba(2, 6, 23, 0.62);
+    }
+
+    .clear-newgame-btn {
+      min-width: 130px;
+    }
+
+    @keyframes clearFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .settings-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 6, 23, 0.45);
+      padding: 16px;
+    }
+
+    .settings-modal.active {
+      display: flex;
+    }
+
+    .settings-dialog {
+      width: min(820px, 100%);
+      max-height: 88vh;
+      overflow: auto;
+      border-radius: 14px;
+      border: 1px solid #d8e0ea;
+      background: #f8fbff;
+      box-shadow: 0 18px 48px rgba(15, 23, 42, 0.28);
+      padding: 14px;
+    }
+
+    .settings-dialog-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .settings-dialog-head h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #1e293b;
+    }
+
+    body.theme-dark .settings-dialog-head h3 {
+      color: #f1f5f9;
+    }
+
+    .settings-note {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    body.low-spec .tile,
+    body.low-spec .layout-btn,
+    body.low-spec .panel-section {
+      transition-duration: 120ms !important;
+    }
+
+    body.low-spec .tile.fail,
+    body.low-spec .tile.success,
+    body.low-spec .tile.removing {
+      animation: none !important;
+    }
+
+    body.low-spec .tile.hint {
+      animation: none !important;
+    }
+
+    body.low-spec .path-glow {
+      display: none !important;
+    }
+
+    body.low-spec .tile.spawning {
+      opacity: 1 !important;
+      animation: none !important;
+      transform: none !important;
+    }
+
+    body.low-spec .board,
+    body.low-spec .time-chip,
+    body.low-spec .panel-section {
+      backdrop-filter: none !important;
+      box-shadow: none !important;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 10px;
+      }
+
+      .toolbar {
+        gap: 8px;
+        padding: 12px;
+      }
+
+      .toolbar label {
+        font-size: 13px;
+      }
+
+      .stats {
+        padding: 8px 12px;
+      }
+
+      .time-chip {
+        margin-left: 0;
+      }
+
+      .board-wrap {
+        padding: 10px;
+        min-height: 300px;
+      }
+
+      .play-layout {
+        padding: 6px 10px 10px;
+      }
+
+      .tile {
+        width: 46px;
+        height: 56px;
+        font-size: 24px;
+      }
+
+      input[type="number"] { width: 62px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      :root {
+        --theme-dur: 1ms;
+      }
+    }
+
+    body.mobile-no-media #mediaControls,
+    body.mobile-no-media .media-column {
+      display: none !important;
+    }
+
+    body.mobile-no-media #playLayout {
+      grid-template-columns: 1fr !important;
+      grid-template-areas: "game" !important;
+    }
+  </style>
+</head>
+<body class="mobile-no-media">
+  <div class="app">
+    <div class="toolbar">
+      <div class="settings-head">
+        <strong>설정</strong>
+        <div class="settings-head-actions">
+          <div id="themeToggle" class="layout-toggle theme-toggle" aria-label="Theme mode">
+            <button id="lightModeBtn" class="layout-btn active" type="button">라이트</button>
+            <button id="darkModeBtn" class="layout-btn" type="button">다크</button>
+          </div>
+          <button id="openSettings" type="button" class="btn-muted">세부 설정</button>
+        </div>
+      </div>
+      <label>행 n
+        <span class="num-stepper">
+          <button id="rowsDown" type="button" class="step-btn" aria-label="rows down">&#9660;</button>
+          <input id="rows" type="number" min="2" max="16" value="8" />
+          <button id="rowsUp" type="button" class="step-btn" aria-label="rows up">&#9650;</button>
+        </span>
+      </label>
+      <label>열 m
+        <span class="num-stepper">
+          <button id="colsDown" type="button" class="step-btn" aria-label="cols down">&#9660;</button>
+          <input id="cols" type="number" min="2" max="20" value="10" />
+          <button id="colsUp" type="button" class="step-btn" aria-label="cols up">&#9650;</button>
+        </span>
+      </label>
+      <label>문양 종류 수
+        <span class="num-stepper">
+          <button id="kindsDown" type="button" class="step-btn" aria-label="kinds down">&#9660;</button>
+          <input id="kinds" type="number" min="2" max="36" value="18" />
+          <button id="kindsUp" type="button" class="step-btn" aria-label="kinds up">&#9650;</button>
+        </span>
+      </label>
+      <span class="mode-pill">게임 모드
+        <span id="modeToggle" class="layout-toggle mode-toggle" aria-label="Mode">
+          <button id="modeRelaxedBtn" class="layout-btn active" type="button">편안한</button>
+          <button id="modeChallengeBtn" class="layout-btn" type="button">도전</button>
+        </span>
+      </span>
+      <button id="newGame" class="btn-accent">새 게임</button>
+      <div id="mediaControls" class="audio-row">
+        <div class="audio-card">
+          <h4>YouTube 컨트롤</h4>
+          <div class="audio-line">
+            <label>YouTube
+              <input id="youtubeUrl" type="text" placeholder="YouTube 링크 붙여넣기" />
+            </label>
+            <label>영상 파일
+              <input id="uploadVideo" type="file" accept="video/*" />
+            </label>
+        </div>
+          <div class="audio-line">
+            <label>패널 크기
+              <input id="ytSize" type="range" min="480" max="1100" value="620" />
+            </label>
+            <div id="layoutToggle" class="layout-toggle" aria-label="레이아웃 선택">
+              <button id="layoutSideBtn" class="layout-btn active" type="button" data-layout-btn="side">가로배치</button>
+              <button id="layoutStackBtn" class="layout-btn" type="button" data-layout-btn="stack">세로배치</button>
+            </div>
+          </div>
+          <div class="audio-line">
+            <button id="playYoutube" type="button" class="btn-muted">유튜브 재생</button>
+            <button id="stopYoutube" type="button" class="btn-muted">유튜브 종료</button>
+            <button id="stopVideo" type="button" class="btn-muted">영상 종료</button>
+          </div>
+          <p class="audio-hint">참고: 유튜브는 브라우저/플랫폼 정책상 광고 차단이나 계정 연동 제어를 게임 내부에서 보장할 수 없습니다.</p>
+        </div>
+      </div>
+    </div>
+    <div id="settingsModal" class="settings-modal" aria-hidden="true">
+      <div class="settings-dialog">
+        <div class="settings-dialog-head">
+          <h3>세부 설정</h3>
+          <button id="closeSettings" type="button" class="btn-muted">닫기</button>
+        </div>
+        <div class="theme-row">
+          <label>프리셋
+            <select id="themePreset">
+              <option value="sunset">Sunset Glow</option>
+              <option value="mint">Mint Neon</option>
+              <option value="ice">Ice Blue</option>
+            </select>
+          </label>
+          <label>선택
+            <input id="pickSelected" type="color" value="#ffe45e" />
+          </label>
+          <label>매칭
+            <input id="pickMatch" type="color" value="#8bf7ff" />
+          </label>
+          <label>연결선
+            <input id="pickPath" type="color" value="#ffffff" />
+          </label>
+          <label>선 글로우
+            <input id="pickPathGlow" type="color" value="#82e6ff" />
+          </label>
+          <label>퍼즐 배경
+            <input id="uploadBoardBg" type="file" accept="image/*" />
+          </label>
+          <button id="clearBoardBg" type="button" class="btn-muted">배경 초기화</button>
+          <label>Selection
+            <select id="selectionStyle">
+              <option value="soft">Soft Glow</option>
+              <option value="neon">Neon</option>
+            </select>
+          </label>
+          <label>Low Spec
+            <input id="lowSpecMode" type="checkbox" />
+          </label>
+          <label>UI 톤
+            <span id="uiToneToggle" class="layout-toggle mode-toggle" aria-label="UI tone">
+              <button id="toneWarmBtn" class="layout-btn active" type="button">웜</button>
+              <button id="toneCoolBtn" class="layout-btn" type="button">쿨</button>
+            </span>
+          </label>
+        </div>
+        <p class="settings-note">색상/배경 설정은 즉시 반영됩니다.</p>
+      </div>
+    </div>
+    <div style="display:none">
+      <select id="bgmPreset"><option value="0">legacy</option></select>
+      <button id="bgmPlay" type="button"></button>
+      <button id="bgmPause" type="button"></button>
+      <button id="bgmMute" type="button"></button>
+      <input id="bgmVolume" type="range" min="0" max="100" value="0" />
+      <input id="uploadBgm" type="file" />
+    </div>
+
+    <div class="game-surface">
+      <div class="stats">
+        <div class="mode-info" id="modeInfo">편안한 모드</div>
+        <div>남은 타일: <strong id="remainingCount">0</strong></div>
+        <div>가능한 조합: <strong id="pairCount">0</strong></div>
+        <div>힌트 남음: <strong id="hintLeft">∞</strong></div>
+        <div>재배치 남음: <strong id="shuffleLeft">∞</strong></div>
+        <div class="time-chip"><span class="label">Round Time</span><span class="value" id="timeDisplay">00:00</span></div>
+      </div>
+
+      <div id="playLayout" class="play-layout" data-layout="side">
+        <div class="game-column">
+          <section class="panel-section">
+            <div class="panel-head">게임</div>
+            <div class="panel-body">
+              <div class="board-wrap">
+                <div id="boardStack" class="board-stack">
+                  <svg id="pathLayer" class="path-layer"></svg>
+                  <div id="board" class="board" aria-label="board"></div>
+                  <div id="startOverlay" class="start-overlay show" aria-hidden="false">
+                    <button id="startFromCenter" type="button" class="btn-accent start-btn">새 게임</button>
+                  </div>
+                  <div id="clearPopup" class="clear-popup" aria-hidden="true">
+                    <div class="clear-card">
+                      <h3 id="clearTitle" class="clear-title">[모드] 클리어!</h3>
+                      <div class="clear-time-label">소요시간</div>
+                      <div id="clearTime" class="clear-time-value">00:00</div>
+                      <button id="clearNewGame" type="button" class="btn-accent clear-newgame-btn">새 게임</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="game-actions">
+                <button id="shuffle" class="btn-muted">문양만 섞기</button>
+                <button id="hint" class="btn-muted">힌트</button>
+              </div>
+              <div id="message" class="message"></div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="media-column">
+          <section class="panel-section">
+            <div class="media-head">
+              <strong>영상</strong>
+              <button id="toggleMediaControls" type="button" class="btn-muted media-toggle-btn">컨트롤 접기</button>
+            </div>
+            <div id="ytWrap" class="yt-wrap">
+              <div class="yt-placeholder">YouTube 링크를 입력하고 재생하면 이 영역에 영상이 표시됩니다.</div>
+              <iframe id="ytFrame" class="yt-frame" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+              <video id="localVideo" class="local-video" controls playsinline></video>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const SYMBOLS = [
+      "🍎", "🍋", "🍇", "🍒", "🍉", "🍑", "🍍", "🥝", "🍓", "🥥",
+      "🐱", "🐶", "🐼", "🦊", "🐸", "🐵", "🦄", "🐙", "🦋", "🐢",
+      "⭐", "🌙", "☀️", "⚡", "🔥", "💧", "🌿", "🍀", "🌸", "🪐",
+      "🎈", "🎲", "🎯", "🎵", "🎁", "🧩"
+    ];
+
+    const boardStackEl = document.getElementById("boardStack");
+    const boardEl = document.getElementById("board");
+    const pathLayerEl = document.getElementById("pathLayer");
+    const rowsEl = document.getElementById("rows");
+    const colsEl = document.getElementById("cols");
+    const kindsEl = document.getElementById("kinds");
+    const openSettingsEl = document.getElementById("openSettings");
+    const lightModeBtnEl = document.getElementById("lightModeBtn");
+    const darkModeBtnEl = document.getElementById("darkModeBtn");
+    const themeToggleEl = document.getElementById("themeToggle");
+    const closeSettingsEl = document.getElementById("closeSettings");
+    const settingsModalEl = document.getElementById("settingsModal");
+    const modeRelaxedBtnEl = document.getElementById("modeRelaxedBtn");
+    const modeChallengeBtnEl = document.getElementById("modeChallengeBtn");
+    const themePresetEl = document.getElementById("themePreset");
+    const pickSelectedEl = document.getElementById("pickSelected");
+    const pickMatchEl = document.getElementById("pickMatch");
+    const pickPathEl = document.getElementById("pickPath");
+    const pickPathGlowEl = document.getElementById("pickPathGlow");
+    const selectionStyleEl = document.getElementById("selectionStyle");
+    const lowSpecModeEl = document.getElementById("lowSpecMode");
+    const uiToneToggleEl = document.getElementById("uiToneToggle");
+    const toneWarmBtnEl = document.getElementById("toneWarmBtn");
+    const toneCoolBtnEl = document.getElementById("toneCoolBtn");
+    const uploadBoardBgEl = document.getElementById("uploadBoardBg");
+    const clearBoardBgEl = document.getElementById("clearBoardBg");
+    const bgmPresetEl = document.getElementById("bgmPreset");
+    const bgmPlayEl = document.getElementById("bgmPlay");
+    const bgmPauseEl = document.getElementById("bgmPause");
+    const bgmMuteEl = document.getElementById("bgmMute");
+    const bgmVolumeEl = document.getElementById("bgmVolume");
+    const uploadBgmEl = document.getElementById("uploadBgm");
+    const youtubeUrlEl = document.getElementById("youtubeUrl");
+    const ytSizeEl = document.getElementById("ytSize");
+    const layoutSideBtnEl = document.getElementById("layoutSideBtn");
+    const layoutStackBtnEl = document.getElementById("layoutStackBtn");
+    const layoutToggleEl = document.getElementById("layoutToggle");
+    const playYoutubeEl = document.getElementById("playYoutube");
+    const stopYoutubeEl = document.getElementById("stopYoutube");
+    const uploadVideoEl = document.getElementById("uploadVideo");
+    const stopVideoEl = document.getElementById("stopVideo");
+    const ytWrapEl = document.getElementById("ytWrap");
+    const mediaControlsEl = document.getElementById("mediaControls");
+    const mediaHeadEl = document.querySelector(".media-head");
+    const toggleMediaControlsEl = document.getElementById("toggleMediaControls");
+    const ytFrameEl = document.getElementById("ytFrame");
+    const localVideoEl = document.getElementById("localVideo");
+    const playLayoutEl = document.getElementById("playLayout");
+    const remainingCountEl = document.getElementById("remainingCount");
+    const pairCountEl = document.getElementById("pairCount");
+    const modeInfoEl = document.getElementById("modeInfo");
+    const modeToggleEl = document.getElementById("modeToggle");
+    const hintLeftEl = document.getElementById("hintLeft");
+    const shuffleLeftEl = document.getElementById("shuffleLeft");
+    const timeDisplayEl = document.getElementById("timeDisplay");
+    const messageEl = document.getElementById("message");
+    const clearPopupEl = document.getElementById("clearPopup");
+    const clearTitleEl = document.getElementById("clearTitle");
+    const clearTimeEl = document.getElementById("clearTime");
+    const clearNewGameEl = document.getElementById("clearNewGame");
+    const startOverlayEl = document.getElementById("startOverlay");
+    const startFromCenterEl = document.getElementById("startFromCenter");
+
+    const state = {
+      rows: 8,
+      cols: 10,
+      board: [],
+      selected: null,
+      hintCells: [],
+      kinds: 18,
+      lastRemainingCount: 0,
+      lastPairs: [],
+      failEffects: [],
+      successEffects: [],
+      effectPaths: [],
+      pathQueue: [],
+      pathAnimating: false,
+      lastPathSig: "",
+      lastPathAt: 0,
+      pathRenderKey: "",
+      hoverPoint: null,
+      hoverRaf: 0,
+      boardBgObjectUrl: null,
+      localVideoUrl: null,
+      hoverActiveTiles: [],
+      hoverTargets: [],
+      tapPointer: null,
+      lastTouchTapAt: 0,
+      lowSpec: false,
+      selectionStyle: "soft",
+      mode: "relaxed",
+      hintLeft: Infinity,
+      shuffleLeft: Infinity,
+      elapsedSec: 0,
+      timerId: null,
+      cleared: false,
+      resolvingDeadlock: false,
+      started: false,
+      uiTone: "warm"
+    };
+
+    const MODE_CONFIG = {
+      relaxed: { label: "편안한 모드", hintLimit: Infinity, shuffleLimit: Infinity },
+      challenge: { label: "도전 모드", hintLimit: 3, shuffleLimit: 4 }
+    };
+
+    const BASE_BGM_TRACKS = [
+      { name: "Offline · Sunny Bell", synth: "sunny" },
+      { name: "Offline · Soft Mint", synth: "mint" },
+      { name: "Offline · Bubble Pop", synth: "bubble" },
+      { name: "Online · Sunny Town", url: "https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3" },
+      { name: "Online · Spring Walk", url: "https://assets.mixkit.co/music/preview/mixkit-valley-sunset-127.mp3" },
+      { name: "Online · Bubble Day", url: "https://assets.mixkit.co/music/preview/mixkit-dance-with-me-3.mp3" }
+    ];
+
+    const bgmPlayer = new Audio();
+    bgmPlayer.loop = true;
+    bgmPlayer.preload = "auto";
+    bgmPlayer.volume = Number(bgmVolumeEl.value) / 100;
+
+    const bgmState = {
+      tracks: BASE_BGM_TRACKS.map((t) => ({ ...t })),
+      currentIndex: 0,
+      customUrls: [],
+      youtubeActive: false,
+      unlocked: false,
+      pendingAutoplay: false,
+      synthCtx: null,
+      synthGain: null,
+      synthTimer: null,
+      synthName: "",
+      synthStep: 0
+    };
+
+    const THEME_PRESETS = {
+      sunset: { selected: "#ffe45e", match: "#8bf7ff", path: "#ffffff", pathGlow: "#82e6ff" },
+      mint: { selected: "#c7ff6f", match: "#72ffd8", path: "#f6fffb", pathGlow: "#6df7d0" },
+      ice: { selected: "#b5e9ff", match: "#8fd8ff", path: "#ffffff", pathGlow: "#8fd8ff" }
+    };
+
+    function hexToRgba(hex, alpha) {
+      const v = hex.replace("#", "");
+      const n = v.length === 3 ? v.split("").map((ch) => ch + ch).join("") : v;
+      const r = parseInt(n.slice(0, 2), 16);
+      const g = parseInt(n.slice(2, 4), 16);
+      const b = parseInt(n.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function applyThemeColors(colors) {
+      const root = document.documentElement;
+      const glow = colors.pathGlow || colors.path;
+      root.style.setProperty("--tile-selected", colors.selected);
+      root.style.setProperty("--tile-selected-glow", hexToRgba(colors.selected, 0.9));
+      root.style.setProperty("--tile-match", colors.match);
+      root.style.setProperty("--tile-match-glow", hexToRgba(colors.match, 0.92));
+      root.style.setProperty("--path-main", colors.path);
+      root.style.setProperty("--path-glow", hexToRgba(glow, 0.45));
+      root.style.setProperty("--path-glow-strong", hexToRgba(glow, 0.82));
+      root.style.setProperty("--path-glow-soft", hexToRgba(glow, 0.48));
+      applySelectionStyle(state.selectionStyle);
+
+      pickSelectedEl.value = colors.selected;
+      pickMatchEl.value = colors.match;
+      pickPathEl.value = colors.path;
+      pickPathGlowEl.value = glow;
+    }
+
+    function applySelectionStyle(style) {
+      const next = style === "neon" ? "neon" : "soft";
+      state.selectionStyle = next;
+      const root = document.documentElement;
+      const isDark = document.body.classList.contains("theme-dark");
+      const base = getComputedStyle(root).getPropertyValue("--tile-selected").trim() || "#ffe45e";
+      if (next === "neon") {
+        root.style.setProperty("--tile-selected-outline", base);
+        root.style.setProperty("--tile-selected-shadow", hexToRgba(base, isDark ? 0.96 : 0.88));
+        root.style.setProperty("--tile-selected-inner", "rgba(255, 255, 255, 0.82)");
+      } else {
+        root.style.setProperty("--tile-selected-outline", "transparent");
+        root.style.setProperty("--tile-selected-shadow", isDark ? hexToRgba(base, 0.74) : "rgba(31, 41, 55, 0.32)");
+        root.style.setProperty("--tile-selected-inner", "rgba(255, 255, 255, 0)");
+      }
+      if (selectionStyleEl) selectionStyleEl.value = next;
+      try {
+        localStorage.setItem("sichuan-selection-style", next);
+      } catch (err) {
+        // ignore storage failures
+      }
+    }
+
+    function applyPerformanceMode(enabled) {
+      const on = Boolean(enabled);
+      state.lowSpec = on;
+      document.body.classList.toggle("low-spec", on);
+      if (lowSpecModeEl) lowSpecModeEl.checked = on;
+      if (on) {
+        if (state.hoverRaf) {
+          cancelAnimationFrame(state.hoverRaf);
+          state.hoverRaf = 0;
+        }
+        state.hoverPoint = null;
+        for (const tile of state.hoverActiveTiles) {
+          tile.style.setProperty("--hover-lift", "0px");
+          tile.style.setProperty("--hover-scale", "1");
+          tile.dataset.hw = "0";
+        }
+        state.hoverActiveTiles = [];
+      }
+      try {
+        localStorage.setItem("sichuan-low-spec", on ? "1" : "0");
+      } catch (err) {
+        // ignore storage failures
+      }
+    }
+
+    function setBoardBackgroundImage(url) {
+      document.documentElement.style.setProperty("--board-bg-image", url ? `url("${url}")` : "none");
+    }
+
+    function rebuildBgmOptions() {
+      bgmPresetEl.innerHTML = "";
+      bgmState.tracks.forEach((track, idx) => {
+        const option = document.createElement("option");
+        option.value = String(idx);
+        option.textContent = track.name;
+        bgmPresetEl.appendChild(option);
+      });
+      bgmPresetEl.value = String(Math.max(0, Math.min(bgmState.currentIndex, bgmState.tracks.length - 1)));
+    }
+
+    function stopYoutubePlayback() {
+      ytFrameEl.src = "";
+      ytWrapEl.classList.remove("active");
+      bgmState.youtubeActive = false;
+    }
+
+    function stopLocalVideoPlayback() {
+      localVideoEl.pause();
+      localVideoEl.removeAttribute("src");
+      localVideoEl.load();
+      ytWrapEl.classList.remove("local-active");
+      if (state.localVideoUrl) {
+        URL.revokeObjectURL(state.localVideoUrl);
+        state.localVideoUrl = null;
+      }
+      uploadVideoEl.value = "";
+    }
+
+    function ensureSynthContext() {
+      if (bgmState.synthCtx) return;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      bgmState.synthCtx = new Ctx();
+      bgmState.synthGain = bgmState.synthCtx.createGain();
+      bgmState.synthGain.gain.value = Number(bgmVolumeEl.value) / 100 * (bgmPlayer.muted ? 0 : 1);
+      bgmState.synthGain.connect(bgmState.synthCtx.destination);
+    }
+
+    function stopSynth() {
+      if (bgmState.synthTimer) {
+        clearInterval(bgmState.synthTimer);
+        bgmState.synthTimer = null;
+      }
+    }
+
+    function synthPattern(name) {
+      if (name === "mint") return [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 783.99, 698.46];
+      if (name === "bubble") return [659.25, 783.99, 880.0, 783.99, 698.46, 783.99, 659.25, 587.33];
+      return [587.33, 739.99, 880.0, 739.99, 659.25, 783.99, 987.77, 783.99];
+    }
+
+    function playSynth(name) {
+      ensureSynthContext();
+      if (!bgmState.synthCtx || !bgmState.synthGain) return;
+      stopSynth();
+
+      bgmState.synthName = name;
+      bgmState.synthStep = 0;
+      const pattern = synthPattern(name);
+      const beatMs = 280;
+
+      const tick = () => {
+        if (!bgmState.synthCtx || !bgmState.synthGain) return;
+        const freq = pattern[bgmState.synthStep % pattern.length];
+        bgmState.synthStep += 1;
+
+        const now = bgmState.synthCtx.currentTime;
+        const osc = bgmState.synthCtx.createOscillator();
+        const env = bgmState.synthCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        env.gain.setValueAtTime(0.0001, now);
+        env.gain.exponentialRampToValueAtTime(0.35, now + 0.03);
+        env.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+        osc.connect(env);
+        env.connect(bgmState.synthGain);
+        osc.start(now);
+        osc.stop(now + 0.24);
+      };
+
+      tick();
+      bgmState.synthTimer = setInterval(tick, beatMs);
+    }
+
+    function tryUnlockAudio() {
+      if (bgmState.unlocked) return Promise.resolve(true);
+      if (!bgmPlayer.src) applyBgmTrack(bgmState.currentIndex, false);
+      ensureSynthContext();
+
+      return bgmPlayer.play().then(() => {
+        bgmPlayer.pause();
+        bgmPlayer.currentTime = 0;
+        bgmState.unlocked = true;
+        if (bgmState.pendingAutoplay) {
+          bgmState.pendingAutoplay = false;
+          const current = bgmState.tracks[bgmState.currentIndex];
+          if (current && current.synth) {
+            playSynth(current.synth);
+            return true;
+          }
+          return bgmPlayer.play().then(() => true).catch(() => false);
+        }
+        return true;
+      }).catch(() => {
+        const current = bgmState.tracks[bgmState.currentIndex];
+        if (current && current.synth) {
+          bgmState.unlocked = true;
+          if (bgmState.pendingAutoplay) {
+            bgmState.pendingAutoplay = false;
+            playSynth(current.synth);
+          }
+          return true;
+        }
+        return false;
+      });
+    }
+
+    function applyBgmTrack(index, autoplay = false) {
+      if (!bgmState.tracks[index]) return;
+      bgmState.currentIndex = index;
+      bgmPresetEl.value = String(index);
+      if (bgmState.youtubeActive) stopYoutubePlayback();
+      const track = bgmState.tracks[index];
+      stopSynth();
+      if (track.synth) {
+        bgmPlayer.pause();
+        bgmPlayer.removeAttribute("src");
+        if (autoplay) playSynth(track.synth);
+        return;
+      }
+
+      bgmPlayer.src = track.url;
+      if (autoplay) {
+        if (bgmState.synthCtx) stopSynth();
+        bgmPlayer.play().catch(() => {
+          setMessage("브라우저 정책으로 자동 재생이 차단되었습니다. 재생 버튼을 눌러주세요.");
+        });
+      }
+    }
+
+    function extractYoutubeId(input) {
+      const raw = input.trim();
+      const patterns = [
+        /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+      ];
+      for (const pattern of patterns) {
+        const m = raw.match(pattern);
+        if (m) return m[1];
+      }
+      return null;
+    }
+
+    function playYoutube() {
+      const id = extractYoutubeId(youtubeUrlEl.value);
+      if (!id) {
+        setMessage("유효한 YouTube 링크를 입력해주세요.");
+        return;
+      }
+
+      stopLocalVideoPlayback();
+      bgmPlayer.pause();
+      const origin = location.protocol.startsWith("http") ? `&origin=${encodeURIComponent(location.origin)}` : "";
+      const src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&loop=1&playlist=${id}&rel=0&modestbranding=1&playsinline=1&enablejsapi=1${origin}`;
+      ytFrameEl.src = src;
+      ytWrapEl.classList.add("active");
+      bgmState.youtubeActive = true;
+
+      if (location.protocol === "file:") {
+        setMessage("로컬 파일(file://)에서는 YouTube 임베드 오류가 날 수 있습니다. 가능하면 로컬 서버로 열어주세요.");
+      } else {
+        setMessage("YouTube 재생을 시작했습니다. 임베드가 막힌 영상이면 우측 링크로 여세요.");
+      }
+    }
+
+    function playLocalVideo(file) {
+      if (!file) return;
+      stopYoutubePlayback();
+      stopLocalVideoPlayback();
+
+      const url = URL.createObjectURL(file);
+      state.localVideoUrl = url;
+      localVideoEl.src = url;
+      ytWrapEl.classList.add("local-active");
+      localVideoEl.play().catch(() => {
+        setMessage("영상 자동 재생이 차단되었습니다. 영상 영역의 재생 버튼을 눌러주세요.");
+      });
+      setMessage(`오프라인 영상 재생: ${file.name}`);
+    }
+
+    function applyLayoutMode(mode) {
+      const nextMode = mode === "stack" ? "stack" : "side";
+      playLayoutEl.dataset.layout = nextMode;
+      layoutSideBtnEl.classList.toggle("active", nextMode === "side");
+      layoutStackBtnEl.classList.toggle("active", nextMode === "stack");
+      setSegmentPosition(layoutToggleEl, nextMode === "stack" ? 1 : 0);
+      applyMediaWidthFromSlider();
+    }
+
+    function applyMediaWidthFromSlider() {
+      const requested = Number(ytSizeEl.value) || 620;
+      let applied = requested;
+
+      if (playLayoutEl.dataset.layout === "side") {
+        const minGame = 700;
+        const horizontalPadding = 120;
+        const viewport = window.innerWidth || document.documentElement.clientWidth || 1440;
+        const maxMedia = Math.max(420, viewport - minGame - horizontalPadding);
+        applied = Math.min(requested, maxMedia);
+      }
+
+      document.documentElement.style.setProperty("--media-w", `${applied}px`);
+      if (applied !== requested) ytSizeEl.value = String(Math.round(applied));
+    }
+
+    function setSegmentPosition(toggleEl, index) {
+      if (!toggleEl) return;
+      toggleEl.style.setProperty("--seg-index", String(index === 1 ? 1 : 0));
+    }
+
+    function applyUiTone(tone) {
+      const nextTone = tone === "cool" ? "cool" : "warm";
+      state.uiTone = nextTone;
+      document.body.classList.toggle("tone-cool", nextTone === "cool");
+      if (toneWarmBtnEl) toneWarmBtnEl.classList.toggle("active", nextTone === "warm");
+      if (toneCoolBtnEl) toneCoolBtnEl.classList.toggle("active", nextTone === "cool");
+      setSegmentPosition(uiToneToggleEl, nextTone === "cool" ? 1 : 0);
+      try {
+        localStorage.setItem("sichuan-ui-tone", nextTone);
+      } catch (err) {
+        // ignore storage failures
+      }
+    }
+
+    function applyUiTheme(mode) {
+      const isDark = mode === "dark";
+      document.body.classList.toggle("theme-dark", isDark);
+      lightModeBtnEl.classList.toggle("active", !isDark);
+      darkModeBtnEl.classList.toggle("active", isDark);
+      setSegmentPosition(themeToggleEl, isDark ? 1 : 0);
+      applySelectionStyle(state.selectionStyle);
+      try {
+        localStorage.setItem("sichuan-ui-theme", isDark ? "dark" : "light");
+      } catch (err) {
+        // ignore storage failures
+      }
+    }
+
+    function setMediaControlsCollapsed(collapsed) {
+      if (!mediaControlsEl || !toggleMediaControlsEl) return;
+      mediaControlsEl.classList.toggle("collapsed", collapsed);
+      toggleMediaControlsEl.textContent = collapsed ? "컨트롤 펼치기" : "컨트롤 접기";
+      try {
+        localStorage.setItem("sichuan-media-controls-collapsed", collapsed ? "1" : "0");
+      } catch (err) {
+        // ignore storage failures
+      }
+    }
+
+    function bindStepper(inputEl, downBtnId, upBtnId) {
+      const down = document.getElementById(downBtnId);
+      const up = document.getElementById(upBtnId);
+      if (!inputEl || !down || !up) return;
+
+      function clampNext(delta) {
+        const current = Number(inputEl.value);
+        const min = Number(inputEl.min || "0");
+        const max = Number(inputEl.max || "999");
+        const safeCurrent = Number.isFinite(current) ? current : min;
+        const next = Math.min(max, Math.max(min, safeCurrent + delta));
+        inputEl.value = String(next);
+      }
+
+      down.addEventListener("click", () => clampNext(-1));
+      up.addEventListener("click", () => clampNext(1));
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, "0");
+      const s = (sec % 60).toString().padStart(2, "0");
+      return `${m}:${s}`;
+    }
+
+    function stopTimer() {
+      if (state.timerId) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      state.timerId = setInterval(() => {
+        state.elapsedSec += 1;
+        timeDisplayEl.textContent = formatTime(state.elapsedSec);
+      }, 1000);
+    }
+
+    function updateModeHud() {
+      const cfg = MODE_CONFIG[state.mode];
+      modeInfoEl.textContent = cfg.label;
+      hintLeftEl.textContent = Number.isFinite(state.hintLeft) ? String(state.hintLeft) : "∞";
+      shuffleLeftEl.textContent = Number.isFinite(state.shuffleLeft) ? String(state.shuffleLeft) : "∞";
+      timeDisplayEl.textContent = formatTime(state.elapsedSec);
+    }
+
+    function setModeChoice(mode, previewOnly = false) {
+      state.mode = mode === "challenge" ? "challenge" : "relaxed";
+      modeRelaxedBtnEl.classList.toggle("active", state.mode === "relaxed");
+      modeChallengeBtnEl.classList.toggle("active", state.mode === "challenge");
+      setSegmentPosition(modeToggleEl, state.mode === "challenge" ? 1 : 0);
+      if (previewOnly) {
+        modeInfoEl.textContent = `${MODE_CONFIG[state.mode].label} (새 게임부터 적용)`;
+        return;
+      }
+      updateModeHud();
+    }
+
+    function setStartOverlayVisible(show) {
+      if (!startOverlayEl) return;
+      startOverlayEl.classList.toggle("show", show);
+      startOverlayEl.setAttribute("aria-hidden", show ? "false" : "true");
+    }
+
+    function resetToStartScreen() {
+      stopTimer();
+      state.started = false;
+      state.selected = null;
+      state.hintCells = [];
+      state.failEffects = [];
+      state.successEffects = [];
+      clearPathEffects();
+      state.hoverPoint = null;
+      state.hoverActiveTiles = [];
+      state.cleared = false;
+      state.elapsedSec = 0;
+      state.lastPairs = [];
+      state.lastRemainingCount = 0;
+      state.board = [];
+      hideClearPopup();
+      updateModeHud();
+      render(false);
+      setStartOverlayVisible(true);
+      setMessage("중앙 새 게임 버튼을 눌러 시작하세요.");
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function makeValuePool(totalCells, kindCount) {
+      const pairCount = totalCells / 2;
+      const ids = [];
+      for (let i = 0; i < pairCount; i += 1) {
+        const id = i % kindCount;
+        ids.push(id, id);
+      }
+      return shuffleArray(ids);
+    }
+
+    function startGame() {
+      const rows = Number(rowsEl.value);
+      const cols = Number(colsEl.value);
+      const kinds = Number(kindsEl.value);
+      const mode = state.mode === "challenge" ? "challenge" : "relaxed";
+
+      if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 2 || cols < 2) {
+        setMessage("행/열은 2 이상의 정수로 입력해주세요.");
+        return;
+      }
+
+      if ((rows * cols) % 2 !== 0) {
+        setMessage("타일 개수(n*m)는 짝수여야 합니다.");
+        return;
+      }
+
+      if (!Number.isInteger(kinds) || kinds < 2 || kinds > SYMBOLS.length) {
+        setMessage(`문양 종류 수는 2~${SYMBOLS.length} 사이로 입력해주세요.`);
+        return;
+      }
+
+      state.rows = rows;
+      state.cols = cols;
+      state.kinds = kinds;
+      state.mode = mode;
+      state.selected = null;
+      state.hintCells = [];
+      state.failEffects = [];
+      state.successEffects = [];
+      clearPathEffects();
+      state.hoverPoint = null;
+      state.hoverActiveTiles = [];
+      state.resolvingDeadlock = false;
+      state.cleared = false;
+      state.elapsedSec = 0;
+      state.started = true;
+      hideClearPopup();
+      setStartOverlayVisible(false);
+
+      const cfg = MODE_CONFIG[state.mode];
+      state.hintLeft = cfg.hintLimit;
+      state.shuffleLeft = cfg.shuffleLimit;
+      updateModeHud();
+      startTimer();
+
+      const ids = makeValuePool(rows * cols, kinds);
+      state.board = Array.from({ length: rows }, (_, r) =>
+        Array.from({ length: cols }, (_, c) => ({
+          id: ids[r * cols + c],
+          removed: false,
+          removing: false
+        }))
+      );
+
+      render(true, { spawn: !state.lowSpec });
+      setMessage(`${cfg.label}로 새 게임을 시작했습니다.`);
+    }
+
+    function cellBlocked(r, c, start, end) {
+      if (r === start.r && c === start.c) return false;
+      if (r === end.r && c === end.c) return false;
+      if (r < 1 || r > state.rows || c < 1 || c > state.cols) return false;
+      const cell = state.board[r - 1][c - 1];
+      return !cell.removed && !cell.removing;
+    }
+
+    function keyOf(state) {
+      return `${state.r},${state.c},${state.dir}`;
+    }
+
+    function compressPath(points) {
+      if (points.length <= 2) return points;
+      const out = [points[0]];
+
+      for (let i = 1; i < points.length - 1; i += 1) {
+        const p0 = points[i - 1];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const dr1 = p1.r - p0.r;
+        const dc1 = p1.c - p0.c;
+        const dr2 = p2.r - p1.r;
+        const dc2 = p2.c - p1.c;
+        if (dr1 !== dr2 || dc1 !== dc2) out.push(p1);
+      }
+
+      out.push(points[points.length - 1]);
+      return out;
+    }
+
+    function findConnectionPath(a, b) {
+      const start = { r: a.r + 1, c: a.c + 1 };
+      const end = { r: b.r + 1, c: b.c + 1 };
+      const maxR = state.rows + 1;
+      const maxC = state.cols + 1;
+      const dirs = [
+        { dr: -1, dc: 0 },
+        { dr: 1, dc: 0 },
+        { dr: 0, dc: -1 },
+        { dr: 0, dc: 1 }
+      ];
+
+      const visited = Array.from({ length: state.rows + 2 }, () =>
+        Array.from({ length: state.cols + 2 }, () => Array(4).fill(3))
+      );
+
+      const startState = { r: start.r, c: start.c, dir: -1, turns: 0 };
+      const queue = [startState];
+      let qIndex = 0;
+      const parent = new Map();
+      let endKey = null;
+
+      while (qIndex < queue.length) {
+        const cur = queue[qIndex++];
+        const curKey = keyOf(cur);
+        for (let d = 0; d < 4; d += 1) {
+          const extraTurn = cur.dir === -1 || cur.dir === d ? 0 : 1;
+          const newTurns = cur.turns + extraTurn;
+          if (newTurns > 2) continue;
+
+          let nr = cur.r + dirs[d].dr;
+          let nc = cur.c + dirs[d].dc;
+
+          while (nr >= 0 && nr <= maxR && nc >= 0 && nc <= maxC) {
+            if (cellBlocked(nr, nc, start, end)) break;
+
+            if (visited[nr][nc][d] > newTurns) {
+              visited[nr][nc][d] = newTurns;
+              const nextState = { r: nr, c: nc, dir: d, turns: newTurns };
+              const nextKey = keyOf(nextState);
+              parent.set(nextKey, curKey);
+              queue.push(nextState);
+
+              if (nr === end.r && nc === end.c) {
+                endKey = nextKey;
+                queue.length = 0;
+                break;
+              }
+            }
+
+            nr += dirs[d].dr;
+            nc += dirs[d].dc;
+          }
+        }
+      }
+
+      if (!endKey) return null;
+
+      const states = [];
+      let cursor = endKey;
+      while (cursor) {
+        const [r, c] = cursor.split(",").map(Number);
+        states.push({ r, c });
+        cursor = parent.get(cursor) || null;
+      }
+
+      states.reverse();
+      return compressPath(states);
+    }
+
+    function getActiveTiles() {
+      const tiles = [];
+      for (let r = 0; r < state.rows; r += 1) {
+        for (let c = 0; c < state.cols; c += 1) {
+          const cell = state.board[r][c];
+          if (!cell.removed && !cell.removing) tiles.push({ r, c, id: cell.id });
+        }
+      }
+      return tiles;
+    }
+
+    function findAllPairs() {
+      const active = getActiveTiles();
+      const pairs = [];
+      const byId = new Map();
+
+      for (const tile of active) {
+        const list = byId.get(tile.id);
+        if (list) list.push(tile);
+        else byId.set(tile.id, [tile]);
+      }
+
+      for (const group of byId.values()) {
+        for (let i = 0; i < group.length; i += 1) {
+          for (let j = i + 1; j < group.length; j += 1) {
+            const path = findConnectionPath(group[i], group[j]);
+            if (path) pairs.push([group[i], group[j], path]);
+          }
+        }
+      }
+
+      return pairs;
+    }
+
+    function clearHint() { state.hintCells = []; }
+    function setMessage(text) {
+      if (messageEl.textContent === text) return;
+      messageEl.textContent = text;
+    }
+    function showClearPopup() {
+      clearTitleEl.textContent = `[${MODE_CONFIG[state.mode].label}] 클리어!`;
+      clearTimeEl.textContent = formatTime(state.elapsedSec);
+      clearPopupEl.classList.add("show");
+      clearPopupEl.setAttribute("aria-hidden", "false");
+    }
+    function hideClearPopup() {
+      clearPopupEl.classList.remove("show");
+      clearPopupEl.setAttribute("aria-hidden", "true");
+    }
+
+    function applyFailEffectsToDom() {
+      const failSet = new Set();
+      for (const f of state.failEffects) {
+        for (const cell of f.cells) failSet.add(`${cell.r},${cell.c}`);
+      }
+
+      for (const tile of boardEl.children) {
+        if (!tile.classList.contains("tile")) continue;
+        const key = `${tile.dataset.r},${tile.dataset.c}`;
+        if (failSet.has(key)) tile.classList.add("fail");
+        else tile.classList.remove("fail");
+      }
+    }
+
+    function applySuccessEffectsToDom() {
+      const successSet = new Set();
+      for (const s of state.successEffects) {
+        for (const cell of s.cells) successSet.add(`${cell.r},${cell.c}`);
+      }
+
+      for (const tile of boardEl.children) {
+        if (!tile.classList.contains("tile")) continue;
+        const key = `${tile.dataset.r},${tile.dataset.c}`;
+        if (successSet.has(key)) tile.classList.add("success");
+        else tile.classList.remove("success");
+      }
+    }
+
+    function applyHoverWave() {
+      state.hoverRaf = 0;
+      const point = state.hoverPoint;
+      const radius = 140;
+
+      if (!point) {
+        for (const tile of state.hoverActiveTiles) {
+          tile.style.setProperty("--hover-lift", "0px");
+          tile.style.setProperty("--hover-scale", "1");
+          tile.dataset.hw = "0";
+        }
+        state.hoverActiveTiles = [];
+        return;
+      }
+
+      const nextActive = [];
+      for (const target of state.hoverTargets) {
+        const tile = target.tile;
+        const cx = target.cx;
+        const cy = target.cy;
+        const dx = point.x - cx;
+        const dy = point.y - cy;
+        const dist = Math.hypot(dx, dy);
+        const influence = Math.max(0, 1 - dist / radius);
+        const eased = influence * influence;
+        if (eased > 0.01) {
+          const lift = 8 * eased;
+          const scale = 1 + 0.07 * eased;
+          tile.style.setProperty("--hover-lift", `${lift.toFixed(2)}px`);
+          tile.style.setProperty("--hover-scale", scale.toFixed(3));
+          tile.dataset.hw = "1";
+          nextActive.push(tile);
+        } else if (tile.dataset.hw === "1") {
+          tile.style.setProperty("--hover-lift", "0px");
+          tile.style.setProperty("--hover-scale", "1");
+          tile.dataset.hw = "0";
+        }
+      }
+      state.hoverActiveTiles = nextActive;
+    }
+
+    function rebuildHoverTargets() {
+      state.hoverTargets = [];
+      for (const tile of boardEl.children) {
+        if (!tile.classList.contains("tile") || tile.classList.contains("removed")) continue;
+        state.hoverTargets.push({
+          tile,
+          cx: tile.offsetLeft + tile.offsetWidth / 2,
+          cy: tile.offsetTop + tile.offsetHeight / 2
+        });
+      }
+    }
+
+    function scheduleHoverWave(force = false) {
+      if (state.lowSpec && !force) return;
+      if (state.hoverRaf) return;
+      state.hoverRaf = requestAnimationFrame(applyHoverWave);
+    }
+
+    function refreshTransientEffects() {
+      applyFailEffectsToDom();
+      applySuccessEffectsToDom();
+      drawEffectPaths(state.effectPaths);
+      scheduleHoverWave();
+    }
+
+    function updateStats(recalculate = true) {
+      if (recalculate) {
+        const active = getActiveTiles();
+        state.lastRemainingCount = active.length;
+        state.lastPairs = findAllPairs();
+      }
+
+      const activeCount = state.lastRemainingCount;
+      const pairs = state.lastPairs;
+      remainingCountEl.textContent = String(activeCount);
+      pairCountEl.textContent = String(pairs.length);
+
+      if (activeCount === 0) {
+        if (!state.cleared) {
+          state.cleared = true;
+          stopTimer();
+          showClearPopup();
+          setMessage("");
+        }
+      } else if (pairs.length === 0) {
+        resolveDeadlock();
+      }
+    }
+
+    function resolveDeadlock() {
+      if (state.resolvingDeadlock || state.lastRemainingCount === 0) return;
+      state.resolvingDeadlock = true;
+      doShuffleSymbols({ consume: false, auto: true });
+      state.resolvingDeadlock = false;
+    }
+
+    function clearPathEffects() {
+      state.effectPaths = [];
+      state.pathQueue = [];
+      state.pathAnimating = false;
+      state.lastPathSig = "";
+      state.lastPathAt = 0;
+      state.pathRenderKey = "";
+      pathLayerEl.innerHTML = "";
+    }
+
+    function pathSignature(path) {
+      return path.map((p) => `${p.r},${p.c}`).join("|");
+    }
+
+    function playNextPathEffect() {
+      if (state.pathAnimating) return;
+      const next = state.pathQueue.shift();
+      if (!next) return;
+      state.pathAnimating = true;
+      state.effectPaths = [next];
+      refreshTransientEffects();
+
+      setTimeout(() => {
+        state.effectPaths = [];
+        state.pathAnimating = false;
+        refreshTransientEffects();
+        playNextPathEffect();
+      }, 900);
+    }
+
+    function addPathEffect(path) {
+      const sig = pathSignature(path);
+      const now = performance.now();
+      if (state.lastPathSig === sig && (now - state.lastPathAt) < 140) return;
+      state.lastPathSig = sig;
+      state.lastPathAt = now;
+
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      state.pathQueue.push({ id, points: path });
+      playNextPathEffect();
+    }
+
+    function addSuccessEffect(a, b) {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      state.successEffects.push({ id, cells: [a, b] });
+      refreshTransientEffects();
+
+      setTimeout(() => {
+        state.successEffects = state.successEffects.filter((s) => s.id !== id);
+        refreshTransientEffects();
+      }, 260);
+    }
+
+    function addFailEffect(a, b) {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      state.failEffects.push({ id, cells: [a, b] });
+      refreshTransientEffects();
+
+      setTimeout(() => {
+        state.failEffects = state.failEffects.filter((f) => f.id !== id);
+        refreshTransientEffects();
+      }, 300);
+    }
+
+    function handleTileClick(r, c) {
+      if (!state.started) return;
+      if (state.cleared) return;
+      if (state.hintCells.length > 0) {
+        const clickedHint = state.hintCells.some((h) => h.r === r && h.c === c);
+        if (clickedHint) {
+          state.hintCells = state.hintCells.filter((h) => !(h.r === r && h.c === c));
+        } else {
+          clearHint();
+        }
+      }
+      const cell = state.board[r][c];
+      if (cell.removed || cell.removing) return;
+
+      if (!state.selected) {
+        state.selected = { r, c };
+        render(false);
+        return;
+      }
+
+      if (state.selected.r === r && state.selected.c === c) {
+        state.selected = null;
+        render(false);
+        return;
+      }
+
+      const first = state.board[state.selected.r][state.selected.c];
+      if (first.id !== cell.id) {
+        state.selected = { r, c };
+        setMessage("같은 문양 타일을 선택해주세요.");
+        render(false);
+        return;
+      }
+
+      const a = { r: state.selected.r, c: state.selected.c, id: first.id };
+      const b = { r, c, id: cell.id };
+      const path = findConnectionPath(a, b);
+
+      if (path) {
+        state.board[a.r][a.c].removing = true;
+        state.board[b.r][b.c].removing = true;
+        state.selected = null;
+        addSuccessEffect(a, b);
+        addPathEffect(path);
+        setMessage("타일을 제거했습니다.");
+        render(true);
+
+        setTimeout(() => {
+          state.board[a.r][a.c].removed = true;
+          state.board[b.r][b.c].removed = true;
+          state.board[a.r][a.c].removing = false;
+          state.board[b.r][b.c].removing = false;
+          render(true);
+        }, 300);
+      } else {
+        addFailEffect(a, b);
+        state.selected = { r, c };
+        setMessage("연결할 수 없는 위치입니다.");
+        render(false);
+      }
+    }
+
+    function doShuffleSymbols(options = {}) {
+      if (!state.started) {
+        setMessage("먼저 새 게임을 시작해 주세요.");
+        return;
+      }
+      if (state.cleared) return;
+      const consume = options.consume !== false;
+      const auto = options.auto === true;
+
+      clearHint();
+      state.selected = null;
+      state.failEffects = [];
+      state.successEffects = [];
+      clearPathEffects();
+      state.hoverPoint = null;
+      state.hoverActiveTiles = [];
+      const active = getActiveTiles();
+
+      if (active.length < 2) {
+        setMessage("섞을 타일이 부족합니다.");
+        return;
+      }
+
+      if (consume && state.mode === "challenge") {
+        if (state.shuffleLeft <= 0) {
+          setMessage("도전 모드에서는 재배치 기회를 모두 사용했습니다.");
+          return;
+        }
+        state.shuffleLeft -= 1;
+      }
+
+      let found = false;
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        const ids = shuffleArray(active.map((t) => t.id));
+        active.forEach((tile, idx) => {
+          state.board[tile.r][tile.c].id = ids[idx];
+        });
+        if (findAllPairs().length > 0) {
+          found = true;
+          break;
+        }
+      }
+
+      render(true, { spawn: !state.lowSpec });
+      updateModeHud();
+      if (auto) {
+        setMessage("가능한 조합이 없어 자동으로 재배치했습니다. (기회 차감 없음)");
+      } else if (!found) {
+        setMessage("재배치 후에도 조합이 매우 적습니다. 다시 재배치해보세요.");
+      } else {
+        setMessage("타일 위치는 고정하고 문양만 섞었습니다.");
+      }
+    }
+
+    function showHint() {
+      if (!state.started) {
+        setMessage("먼저 새 게임을 시작해 주세요.");
+        return;
+      }
+      if (state.cleared) return;
+      clearHint();
+      state.selected = null;
+      const pairs = state.lastPairs;
+
+      if (pairs.length === 0) {
+        setMessage("힌트를 찾지 못했습니다. 가능한 조합이 없습니다.");
+        render(false);
+        return;
+      }
+
+      if (state.mode === "challenge") {
+        if (state.hintLeft <= 0) {
+          setMessage("도전 모드에서는 힌트 기회를 모두 사용했습니다.");
+          render(false);
+          return;
+        }
+        state.hintLeft -= 1;
+        updateModeHud();
+      }
+
+      state.hintCells = [pairs[0][0], pairs[0][1]];
+      setMessage("힌트: 강조된 두 타일 중 하나를 먼저 선택해보세요.");
+      render(false);
+    }
+
+    function drawEffectPaths(paths) {
+      if (!paths || paths.length === 0) {
+        if (state.pathRenderKey !== "") {
+          pathLayerEl.innerHTML = "";
+          state.pathRenderKey = "";
+        }
+        return;
+      }
+
+      const renderKey = paths.map((p) => p.id).join("|");
+      if (state.pathRenderKey === renderKey) return;
+      state.pathRenderKey = renderKey;
+      pathLayerEl.innerHTML = "";
+
+      const sampleTile = boardEl.querySelector(".tile:not(.removed)");
+      if (!sampleTile) return;
+
+      const tileRect = sampleTile.getBoundingClientRect();
+      const stackRect = boardStackEl.getBoundingClientRect();
+      const gap = parseFloat(getComputedStyle(boardEl).gap || "0");
+      const stepX = tileRect.width + gap;
+      const stepY = tileRect.height + gap;
+      const width = boardStackEl.clientWidth;
+      const height = boardStackEl.clientHeight;
+
+      pathLayerEl.setAttribute("width", String(width));
+      pathLayerEl.setAttribute("height", String(height));
+      pathLayerEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      pathLayerEl.style.left = "0";
+      pathLayerEl.style.top = "0";
+
+      const centers = new Map();
+      const tiles = boardEl.querySelectorAll(".tile");
+      for (const tile of tiles) {
+        const r = Number(tile.dataset.r);
+        const c = Number(tile.dataset.c);
+        const rect = tile.getBoundingClientRect();
+        const x = rect.left - stackRect.left + rect.width / 2;
+        const y = rect.top - stackRect.top + rect.height / 2;
+        centers.set(`${r},${c}`, { x, y });
+      }
+
+      const origin = centers.get("0,0");
+      if (!origin) return;
+
+      const rightRef = centers.get("0,1");
+      const downRef = centers.get("1,0");
+      const realStepX = rightRef ? (rightRef.x - origin.x) : stepX;
+      const realStepY = downRef ? (downRef.y - origin.y) : stepY;
+
+      function pointToXY(point) {
+        const br = point.r - 1;
+        const bc = point.c - 1;
+        const direct = centers.get(`${br},${bc}`);
+        if (direct) return direct;
+        return {
+          x: origin.x + bc * realStepX,
+          y: origin.y + br * realStepY
+        };
+      }
+
+      for (const path of paths) {
+        const points = path.points.map((p) => {
+          const pos = pointToXY(p);
+          return `${pos.x},${pos.y}`;
+        }).join(" ");
+
+        const main = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        main.setAttribute("points", points);
+        main.setAttribute("class", "path-main");
+
+        const glow = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        glow.setAttribute("points", points);
+        glow.setAttribute("class", "path-glow");
+
+        let totalLength = 220;
+        try {
+          if (typeof main.getTotalLength === "function") {
+            totalLength = Math.max(1, main.getTotalLength());
+          }
+        } catch (err) {
+          totalLength = 220;
+        }
+        main.style.strokeDasharray = String(totalLength);
+        main.style.strokeDashoffset = String(totalLength);
+        glow.style.strokeDasharray = String(totalLength);
+        glow.style.strokeDashoffset = String(totalLength);
+        main.style.setProperty("--path-len", String(totalLength));
+        glow.style.setProperty("--path-len", String(totalLength));
+
+        if (!state.lowSpec) pathLayerEl.appendChild(glow);
+        pathLayerEl.appendChild(main);
+      }
+    }
+
+    function render(recalculateStats = false, options = {}) {
+      const shouldSpawn = Boolean(options.spawn) && !state.lowSpec;
+      if (!state.started || state.board.length === 0) {
+        boardEl.style.gridTemplateColumns = "none";
+        boardEl.innerHTML = "";
+        state.hoverTargets = [];
+        drawEffectPaths([]);
+        pathLayerEl.innerHTML = "";
+        state.pathRenderKey = "";
+        remainingCountEl.textContent = "0";
+        pairCountEl.textContent = "0";
+        hintLeftEl.textContent = Number.isFinite(state.hintLeft) ? String(state.hintLeft) : "∞";
+        shuffleLeftEl.textContent = Number.isFinite(state.shuffleLeft) ? String(state.shuffleLeft) : "∞";
+        return;
+      }
+      boardEl.style.gridTemplateColumns = `repeat(${state.cols}, minmax(40px, auto))`;
+      boardEl.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+
+      for (let r = 0; r < state.rows; r += 1) {
+        for (let c = 0; c < state.cols; c += 1) {
+          const cell = state.board[r][c];
+          const tile = document.createElement("button");
+          tile.className = "tile";
+          tile.type = "button";
+          tile.dataset.r = String(r);
+          tile.dataset.c = String(c);
+
+          if (cell.removed) {
+            tile.classList.add("removed");
+            tile.textContent = "";
+          } else {
+            tile.textContent = SYMBOLS[cell.id];
+            tile.style.setProperty("--h", String((cell.id * 37) % 360));
+            if (cell.removing) tile.classList.add("removing");
+          }
+
+          if (state.selected && state.selected.r === r && state.selected.c === c) {
+            tile.classList.add("selected");
+          }
+
+          if (state.hintCells.some((h) => h.r === r && h.c === c)) {
+            tile.classList.add("hint");
+          }
+
+          if (shouldSpawn && !cell.removed && !cell.removing) {
+            const jitter = Math.floor(Math.random() * 120);
+            const wave = ((r + c) % 4) * 22;
+            tile.classList.add("spawning");
+            tile.style.setProperty("--spawn-delay", `${jitter + wave}ms`);
+          }
+
+          fragment.appendChild(tile);
+        }
+      }
+      boardEl.appendChild(fragment);
+
+      state.hoverTargets = [];
+      if (!state.lowSpec) rebuildHoverTargets();
+
+      if (state.effectPaths.length === 0) {
+        const sampleTile = boardEl.querySelector(".tile:not(.removed)");
+        if (sampleTile) {
+          const tileRect = sampleTile.getBoundingClientRect();
+          const gap = parseFloat(getComputedStyle(boardEl).gap || "8");
+          const stepX = tileRect.width + gap;
+          const stepY = tileRect.height + gap;
+          boardStackEl.style.padding = `${stepY}px ${stepX}px`;
+        }
+      }
+
+      refreshTransientEffects();
+      updateStats(recalculateStats);
+    }
+
+    function getTileFromEventTarget(target) {
+      if (!(target instanceof Element)) return null;
+      const tile = target.closest(".tile");
+      if (!tile || !boardEl.contains(tile)) return null;
+      const r = Number(tile.dataset.r);
+      const c = Number(tile.dataset.c);
+      if (!Number.isInteger(r) || !Number.isInteger(c)) return null;
+      return { tile, r, c };
+    }
+
+    boardEl.addEventListener("pointerdown", (event) => {
+      const hit = getTileFromEventTarget(event.target);
+      if (!hit) {
+        state.tapPointer = null;
+        return;
+      }
+      state.tapPointer = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        r: hit.r,
+        c: hit.c
+      };
+    });
+
+    boardEl.addEventListener("pointerup", (event) => {
+      const hit = getTileFromEventTarget(event.target);
+      if (!hit || !state.tapPointer) return;
+      if (event.pointerId !== state.tapPointer.id) return;
+
+      const moved = Math.hypot(event.clientX - state.tapPointer.x, event.clientY - state.tapPointer.y);
+      const sameTile = (hit.r === state.tapPointer.r) && (hit.c === state.tapPointer.c);
+      state.tapPointer = null;
+      if (!sameTile || moved > 14) return;
+      if (event.pointerType === "mouse") return;
+
+      event.preventDefault();
+      state.lastTouchTapAt = performance.now();
+      handleTileClick(hit.r, hit.c);
+    });
+
+    boardEl.addEventListener("pointercancel", () => {
+      state.tapPointer = null;
+    });
+
+    boardEl.addEventListener("click", (event) => {
+      const hit = getTileFromEventTarget(event.target);
+      if (!hit) return;
+      if (performance.now() - state.lastTouchTapAt < 500) return;
+      handleTileClick(hit.r, hit.c);
+    });
+
+    if (!window.PointerEvent) {
+      boardEl.addEventListener("touchend", (event) => {
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (!touch) return;
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const hit = getTileFromEventTarget(target);
+        if (!hit) return;
+        event.preventDefault();
+        state.lastTouchTapAt = performance.now();
+        handleTileClick(hit.r, hit.c);
+      }, { passive: false });
+    }
+
+    boardEl.addEventListener("pointermove", (event) => {
+      if (event.pointerType === "touch") return;
+      const isPenHover = event.pointerType === "pen" && event.buttons === 0;
+      const allowHover = event.pointerType === "mouse" || isPenHover;
+      if (!allowHover) return;
+      if (state.lowSpec && !isPenHover) return;
+      if (state.hoverTargets.length === 0) rebuildHoverTargets();
+      const rect = boardEl.getBoundingClientRect();
+      state.hoverPoint = {
+        x: event.clientX - rect.left + boardEl.scrollLeft,
+        y: event.clientY - rect.top + boardEl.scrollTop
+      };
+      scheduleHoverWave(isPenHover);
+    });
+
+    boardEl.addEventListener("pointerleave", () => {
+      if (state.lowSpec && state.hoverActiveTiles.length === 0) return;
+      state.hoverPoint = null;
+      scheduleHoverWave(true);
+    });
+
+    document.getElementById("newGame").addEventListener("click", startGame);
+    clearNewGameEl.addEventListener("click", startGame);
+    if (startFromCenterEl) startFromCenterEl.addEventListener("click", startGame);
+    document.getElementById("shuffle").addEventListener("click", doShuffleSymbols);
+    document.getElementById("hint").addEventListener("click", showHint);
+    modeRelaxedBtnEl.addEventListener("click", () => setModeChoice("relaxed", true));
+    modeChallengeBtnEl.addEventListener("click", () => setModeChoice("challenge", true));
+
+    themePresetEl.addEventListener("change", () => {
+      const preset = THEME_PRESETS[themePresetEl.value] || THEME_PRESETS.sunset;
+      applyThemeColors(preset);
+      applySelectionStyle(state.selectionStyle);
+      refreshTransientEffects();
+    });
+
+    function applyCustomThemeFromPickers() {
+      applyThemeColors({
+        selected: pickSelectedEl.value,
+        match: pickMatchEl.value,
+        path: pickPathEl.value,
+        pathGlow: pickPathGlowEl.value
+      });
+      applySelectionStyle(state.selectionStyle);
+      refreshTransientEffects();
+    }
+
+    pickSelectedEl.addEventListener("input", applyCustomThemeFromPickers);
+    pickMatchEl.addEventListener("input", applyCustomThemeFromPickers);
+    pickPathEl.addEventListener("input", applyCustomThemeFromPickers);
+    pickPathGlowEl.addEventListener("input", applyCustomThemeFromPickers);
+    if (selectionStyleEl) {
+      selectionStyleEl.addEventListener("change", () => applySelectionStyle(selectionStyleEl.value));
+    }
+    if (lowSpecModeEl) {
+      lowSpecModeEl.addEventListener("change", () => applyPerformanceMode(lowSpecModeEl.checked));
+    }
+
+    uploadBoardBgEl.addEventListener("change", () => {
+      const file = uploadBoardBgEl.files && uploadBoardBgEl.files[0];
+      if (!file) return;
+      if (state.boardBgObjectUrl) URL.revokeObjectURL(state.boardBgObjectUrl);
+      const url = URL.createObjectURL(file);
+      state.boardBgObjectUrl = url;
+      setBoardBackgroundImage(url);
+      setMessage("퍼즐 배경 이미지를 적용했습니다.");
+    });
+
+    clearBoardBgEl.addEventListener("click", () => {
+      if (state.boardBgObjectUrl) {
+        URL.revokeObjectURL(state.boardBgObjectUrl);
+        state.boardBgObjectUrl = null;
+      }
+      uploadBoardBgEl.value = "";
+      setBoardBackgroundImage(null);
+      setMessage("퍼즐 배경 이미지를 초기화했습니다.");
+    });
+
+    bgmPresetEl.addEventListener("change", () => {
+      const idx = Number(bgmPresetEl.value);
+      applyBgmTrack(Number.isInteger(idx) ? idx : 0, false);
+      setMessage(`BGM 트랙: ${bgmState.tracks[bgmState.currentIndex].name}`);
+    });
+
+    bgmPlayEl.addEventListener("click", () => {
+      if (bgmState.youtubeActive) stopYoutubePlayback();
+      if (!bgmPlayer.src && !(bgmState.tracks[bgmState.currentIndex] && bgmState.tracks[bgmState.currentIndex].synth)) {
+        applyBgmTrack(bgmState.currentIndex, false);
+      }
+      tryUnlockAudio().then(() => {
+        const track = bgmState.tracks[bgmState.currentIndex];
+        if (track && track.synth) {
+          playSynth(track.synth);
+          return;
+        }
+        bgmPlayer.play().catch(() => {
+          const hint = location.protocol === "file:"
+            ? "file:// 환경에서는 오디오 차단이 자주 발생합니다. bat로 실행한 localhost 페이지에서 다시 시도해주세요."
+            : "재생 실패: 네트워크 차단 또는 브라우저 정책일 수 있습니다. 오프라인 트랙 또는 내 음악 업로드를 사용해보세요.";
+          setMessage(hint);
+        });
+      });
+    });
+
+    bgmPauseEl.addEventListener("click", () => {
+      bgmPlayer.pause();
+      stopSynth();
+    });
+
+    bgmMuteEl.addEventListener("click", () => {
+      if (bgmState.youtubeActive) {
+        setMessage("유튜브 음소거는 임베드 플레이어에서 조절해주세요.");
+        return;
+      }
+      bgmPlayer.muted = !bgmPlayer.muted;
+      if (bgmState.synthGain) {
+        bgmState.synthGain.gain.value = bgmPlayer.muted ? 0 : Number(bgmVolumeEl.value) / 100;
+      }
+      bgmMuteEl.textContent = bgmPlayer.muted ? "음소거 해제" : "음소거";
+    });
+
+    bgmVolumeEl.addEventListener("input", () => {
+      bgmPlayer.volume = Number(bgmVolumeEl.value) / 100;
+      if (bgmState.synthGain) {
+        bgmState.synthGain.gain.value = bgmPlayer.muted ? 0 : Number(bgmVolumeEl.value) / 100;
+      }
+      if (bgmPlayer.volume > 0 && bgmPlayer.muted) {
+        bgmPlayer.muted = false;
+        bgmMuteEl.textContent = "음소거";
+      }
+    });
+
+    uploadBgmEl.addEventListener("change", () => {
+      const files = uploadBgmEl.files ? Array.from(uploadBgmEl.files) : [];
+      if (files.length === 0) return;
+
+      for (const file of files) {
+        const url = URL.createObjectURL(file);
+        bgmState.customUrls.push(url);
+        bgmState.tracks.push({ name: `내 음악 · ${file.name}`, url });
+      }
+
+      rebuildBgmOptions();
+      const newIndex = bgmState.tracks.length - files.length;
+      applyBgmTrack(newIndex, true);
+      setMessage(`내 음악 ${files.length}곡을 추가했습니다.`);
+    });
+
+    playYoutubeEl.addEventListener("click", playYoutube);
+    stopYoutubeEl.addEventListener("click", () => {
+      stopYoutubePlayback();
+      setMessage("YouTube 재생을 종료했습니다.");
+    });
+
+    uploadVideoEl.addEventListener("change", () => {
+      const file = uploadVideoEl.files && uploadVideoEl.files[0];
+      if (!file) return;
+      playLocalVideo(file);
+    });
+
+    stopVideoEl.addEventListener("click", () => {
+      stopLocalVideoPlayback();
+      setMessage("오프라인 영상 재생을 종료했습니다.");
+    });
+
+    ytSizeEl.addEventListener("input", () => {
+      ytSizeEl.dataset.pending = ytSizeEl.value;
+    });
+    ytSizeEl.addEventListener("change", applyMediaWidthFromSlider);
+
+    layoutSideBtnEl.addEventListener("click", () => applyLayoutMode("side"));
+    layoutStackBtnEl.addEventListener("click", () => applyLayoutMode("stack"));
+    lightModeBtnEl.addEventListener("click", () => applyUiTheme("light"));
+    darkModeBtnEl.addEventListener("click", () => applyUiTheme("dark"));
+    if (toneWarmBtnEl) toneWarmBtnEl.addEventListener("click", () => applyUiTone("warm"));
+    if (toneCoolBtnEl) toneCoolBtnEl.addEventListener("click", () => applyUiTone("cool"));
+    if (toggleMediaControlsEl) {
+      toggleMediaControlsEl.addEventListener("click", () => {
+        const next = !mediaControlsEl.classList.contains("collapsed");
+        setMediaControlsCollapsed(next);
+      });
+    }
+
+    const unlockOnce = () => {
+      tryUnlockAudio().then((ok) => {
+        if (!ok) return;
+      });
+      document.removeEventListener("pointerdown", unlockOnce);
+      document.removeEventListener("keydown", unlockOnce);
+    };
+    document.addEventListener("pointerdown", unlockOnce, { once: true });
+    document.addEventListener("keydown", unlockOnce, { once: true });
+
+    window.addEventListener("beforeunload", () => {
+      stopTimer();
+      stopSynth();
+      if (state.boardBgObjectUrl) URL.revokeObjectURL(state.boardBgObjectUrl);
+      stopLocalVideoPlayback();
+      for (const url of bgmState.customUrls) URL.revokeObjectURL(url);
+      stopYoutubePlayback();
+    });
+
+    window.addEventListener("resize", () => {
+      applyMediaWidthFromSlider();
+    });
+
+    if (mediaControlsEl && mediaHeadEl) {
+      mediaHeadEl.insertAdjacentElement("afterend", mediaControlsEl);
+    }
+
+    const gameHeadEl = document.querySelector(".game-column .panel-head");
+    const roundTimeChipEl = timeDisplayEl ? timeDisplayEl.closest(".time-chip") : null;
+    if (gameHeadEl && roundTimeChipEl) {
+      gameHeadEl.appendChild(roundTimeChipEl);
+    }
+
+    function setFieldLabel(inputEl, title) {
+      const label = inputEl ? inputEl.closest("label") : null;
+      if (!label) return;
+      label.classList.add("setting-field");
+      for (const node of label.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          node.textContent = title;
+          break;
+        }
+      }
+    }
+
+    setFieldLabel(rowsEl, "가로");
+    setFieldLabel(colsEl, "세로");
+    setFieldLabel(kindsEl, "문양 종류");
+
+    applyThemeColors(THEME_PRESETS.sunset);
+    let initialUiTheme = "light";
+    try {
+      const stored = localStorage.getItem("sichuan-ui-theme");
+      if (stored === "dark" || stored === "light") initialUiTheme = stored;
+    } catch (err) {
+      initialUiTheme = "light";
+    }
+    applyUiTheme(initialUiTheme);
+    let initialUiTone = "warm";
+    try {
+      const storedTone = localStorage.getItem("sichuan-ui-tone");
+      if (storedTone === "warm" || storedTone === "cool") initialUiTone = storedTone;
+    } catch (err) {
+      initialUiTone = "warm";
+    }
+    applyUiTone(initialUiTone);
+    let initialSelectionStyle = "soft";
+    let initialLowSpec = false;
+    try {
+      const storedSel = localStorage.getItem("sichuan-selection-style");
+      if (storedSel === "soft" || storedSel === "neon") initialSelectionStyle = storedSel;
+      initialLowSpec = localStorage.getItem("sichuan-low-spec") === "1";
+    } catch (err) {
+      initialSelectionStyle = "soft";
+      initialLowSpec = false;
+    }
+    if (!initialLowSpec && window.matchMedia && window.matchMedia("(pointer: coarse)").matches) {
+      initialLowSpec = true;
+    }
+    applySelectionStyle(initialSelectionStyle);
+    applyPerformanceMode(initialLowSpec);
+    bindStepper(rowsEl, "rowsDown", "rowsUp");
+    bindStepper(colsEl, "colsDown", "colsUp");
+    bindStepper(kindsEl, "kindsDown", "kindsUp");
+    let initialMediaCollapsed = false;
+    try {
+      initialMediaCollapsed = localStorage.getItem("sichuan-media-controls-collapsed") === "1";
+    } catch (err) {
+      initialMediaCollapsed = false;
+    }
+    setMediaControlsCollapsed(initialMediaCollapsed);
+    setBoardBackgroundImage(null);
+    applyMediaWidthFromSlider();
+    applyLayoutMode("side");
+    rebuildBgmOptions();
+    applyBgmTrack(0, false);
+    setModeChoice("relaxed", false);
+    resetToStartScreen();
+
+    openSettingsEl.addEventListener("click", () => {
+      settingsModalEl.classList.add("active");
+      settingsModalEl.setAttribute("aria-hidden", "false");
+    });
+
+    closeSettingsEl.addEventListener("click", () => {
+      settingsModalEl.classList.remove("active");
+      settingsModalEl.setAttribute("aria-hidden", "true");
+    });
+
+    settingsModalEl.addEventListener("click", (event) => {
+      if (event.target === settingsModalEl) {
+        settingsModalEl.classList.remove("active");
+        settingsModalEl.setAttribute("aria-hidden", "true");
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && settingsModalEl.classList.contains("active")) {
+        settingsModalEl.classList.remove("active");
+        settingsModalEl.setAttribute("aria-hidden", "true");
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
